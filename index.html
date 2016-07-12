@@ -19,11 +19,52 @@
     <div id="map"></div>
     <script>
       var map;
+
+      function HillaryToGeoJSON(json_string) {
+        var geo_json = {"type": "FeatureCollection",
+          "features": []
+        };
+        for (var i = 0; i < json_string.events.length; i++) {
+          geo_json.features.push({"type": "Feature",
+            "geometry": {"type": "Point",
+              "coordinates": [Number(json_string.events[i].locations[0].longitude),Number(json_string.events[i].locations[0].latitude)]
+            },
+            "properties": {
+              "title": json_string.events[i].name,
+              "description": json_string.events[i].description,
+              "start_date": json_string.events[i].startDate,
+              "end_date": json_string.events[i].endDate
+            }
+          });
+        }
+        return geo_json;
+      }
+
       function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
-          center: {lat: -34.397, lng: 150.644},
-          zoom: 8
+          center: {lat: 40.1680337, lng: -94.7811732},
+          zoom: 5,
+          styles: [{"featureType":"landscape","stylers":[{"hue":"#F1FF00"},{"saturation":-27.4},{"lightness":9.4},{"gamma":1}]},{"featureType":"road.highway","stylers":[{"hue":"#0099FF"},{"saturation":-20},{"lightness":36.4},{"gamma":1}]},{"featureType":"road.arterial","stylers":[{"hue":"#00FF4F"},{"saturation":0},{"lightness":0},{"gamma":1}]},{"featureType":"road.local","stylers":[{"hue":"#FFB300"},{"saturation":-38},{"lightness":11.2},{"gamma":1}]},{"featureType":"water","stylers":[{"hue":"#00B6FF"},{"saturation":4.2},{"lightness":-63.4},{"gamma":1}]},{"featureType":"poi","stylers":[{"hue":"#9FFF00"},{"saturation":0},{"lightness":0},{"gamma":1}]}]
         });
+
+        var infowindow = new google.maps.InfoWindow;
+
+        map.data.addListener('click', function(event) {
+          infowindow.setContent(event.feature.getProperty("title"));
+          infowindow.setPosition(event.feature.getGeometry().get());
+          infowindow.open(map);
+        });
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+          if (xhttp.readyState == 4 && xhttp.status == 200) {
+            map.data.addGeoJson(HillaryToGeoJSON(JSON.parse(xhttp.responseText)));
+          }
+        };
+
+        xhttp.open("GET", "https://www.hillaryclinton.com/api/events/events?lat=36.778261&lng=-119.41793239999998&radius=250&earliestTime=2016-06-28T16%3A51%3A45.735Z&status=confirmed&visibility=public&perPage=100&onepage=1&_=1467147104894", true);
+        xhttp.send();
+
       }
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDhUbn5cm5zOYo7-4l4l6ODZ-BesKiEnTo&callback=initMap" async defer></script>
