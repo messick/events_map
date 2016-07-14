@@ -8,9 +8,18 @@ html, body {
   height: 100%;
 }
 
+#logo {
+  top: 30px;
+  width: 50px;
+  padding: 10px;
+  position: absolute;
+  right: 30px;
+}
+
 #info-box {
   background-color: white;
-  border: 1px solid black;
+  border: 1px solid gray;
+  border-radius: 10px;
   bottom: 70px;
   height: 20px;
   width: 100px;
@@ -25,4 +34,9 @@ html, body {
 
 #zip {
   width: 50%;
+}
+
+#go-btn {
+  color: #fff;
+  border: 2px solid gray;
 }
