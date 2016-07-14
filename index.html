@@ -4,32 +4,16 @@
     <title>H Map</title>
     <meta name="viewport" content="initial-scale=1.0">
     <meta charset="utf-8">
-    <style>
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-      #map {
-        height: 100%;
-      }
-
-      #info-box {
-        background-color: white;
-        border: 1px solid black;
-        bottom: 70px;
-        height: 20px;
-        width: 100px;
-        padding: 10px;
-        position: absolute;
-        left: 30px;
-      }
-
-    </style>
+    <link rel="stylesheet" type="text/css" href="css/styles.css">
   </head>
   <body>
     <div id="map"></div>
-    <div id="info-box"></div>
+    <div id="info-box">
+      <form id="zip-fields">
+        <input type="text" name="zip" id="zip" maxlength="5" pattern="[0-9]*">
+        <input type="submit" value="Go">
+      </form>
+    </div>
     <script src="js/variables.js"></script>
     <script>
 
@@ -67,6 +51,7 @@
             }
           }
         }
+      // document.getElementById('info-box').textContent = lat_lng[0] + ', ' + lat_lng[1];
 
         map = new google.maps.Map(document.getElementById('map'), {
           center: {lat: lat_lng[0], lng: lat_lng[1]},
