@@ -220,7 +220,7 @@
         };
 
         // This calls the HillaryClinton.com API
-        xhttp.open("GET", ("https://www.hillaryclinton.com/api/events/events?lat="+lat_lng[0]+"&lng="+lat_lng[1]+"&radius=50&earliestTime=2016-06-28T16%3A51%3A45.735Z&status=confirmed&visibility=public&perPage=500&onepage=1&_=1467147104894"), true);
+        xhttp.open("GET", ("https://www.hillaryclinton.com/api/events/events?lat="+lat_lng[0]+"&lng="+lat_lng[1]+"&radius=50&earliestTime="+encodeURIComponent(new Date().toISOString())+"&status=confirmed&visibility=public&perPage=500&onepage=1&_=1467147104894"), true);
         xhttp.send();
 
         hillary_polygon.setMap(map);
