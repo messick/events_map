@@ -27,8 +27,24 @@
         'phone bank': {}
       };
 
-      // Convert the HillaryClinton.com API results into GeoJSON format
-      function HillaryToGeoJSON(json_string, split_by_event_type) { // json_string represents the HillaryClinton.com API results. split_by_event_type is a Boolean variable designating whether the results should be split by the event_types variable or just aggregated altogether regardless of event type.
+      // Take a given event from the HillaryClinton.com API and turn it into a GeoJSON marker with relevant properties
+      function fillEventProperties(hillary_event) {
+        return {"type": "Feature",
+          "geometry": {"type": "Point",
+            "coordinates": [Number(hillary_event.locations[0].longitude),Number(hillary_event.locations[0].latitude)]
+          },
+          "properties": {
+            "title": hillary_event.name,
+            "description": hillary_event.description,
+            "start_date": hillary_event.startDate,
+            "end_date": hillary_event.endDate,
+            "lookup_id": hillary_event.lookupId
+          }
+        };
+      }
+
+      // Convert the HillaryClinton.com API results into a JSON object containing one or more GeoJSON layers
+      function HillaryToHashOfGeoJSONs(json_string, split_by_event_type) { // json_string represents the HillaryClinton.com API results. split_by_event_type is a Boolean variable designating whether the results should be split by the event_types variable or just aggregated altogether regardless of event type.
 
         // Initialize return variable
         var geo_json = {};
@@ -50,17 +66,7 @@
             for (var key in event_types) {
               if (json_string.events[i].name.toLowerCase().includes(key)) {
 
-                geo_json[key].features.push({"type": "Feature",
-                  "geometry": {"type": "Point",
-                    "coordinates": [Number(json_string.events[i].locations[0].longitude),Number(json_string.events[i].locations[0].latitude)]
-                  },
-                  "properties": {
-                    "title": json_string.events[i].name,
-                    "description": json_string.events[i].description,
-                    "start_date": json_string.events[i].startDate,
-                    "end_date": json_string.events[i].endDate
-                  }
-                });
+                geo_json[key].features.push(fillEventProperties(json_string.events[i]));
 
                 // Don't keep going: once you add this event to the correct category, break out of the inner loop.
                 break;
@@ -84,17 +90,7 @@
           for (var i = 0; i < json_string.events.length; i++) {
 
             // Add the event properties to the geo_json variable
-            geo_json.features.push({"type": "Feature",
-              "geometry": {"type": "Point",
-                "coordinates": [Number(json_string.events[i].locations[0].longitude),Number(json_string.events[i].locations[0].latitude)]
-              },
-              "properties": {
-                "title": json_string.events[i].name,
-                "description": json_string.events[i].description,
-                "start_date": json_string.events[i].startDate,
-                "end_date": json_string.events[i].endDate
-              }
-            });
+            geo_json.features.push(json_string.events[i]);
 
           }
 
@@ -137,13 +133,13 @@
 
             var data_layer = new google.maps.Data();
 
-            var event_layers = HillaryToGeoJSON(JSON.parse(xhttp.responseText), true);
+            var event_layers = HillaryToHashOfGeoJSONs(JSON.parse(xhttp.responseText), true);
             for (var layer in event_layers) {
               data_layer = new google.maps.Data();
               data_layer.addGeoJson(event_layers[layer]);
               data_layer.setMap(map);
               data_layer.addListener('click', function (event) {
-                infowindow.setContent("<strong>" + event.feature.getProperty("title") + "</strong><br>" + event.feature.getProperty("description"));
+                infowindow.setContent("<strong>" + event.feature.getProperty("title") + "</strong><br>" + event.feature.getProperty("description")+ "<br><a href='https://www.hillaryclinton.com/events/view/"+event.feature.getProperty("lookup_id")+"/' target='_blank'>RSVP</a>");
                 infowindow.setPosition(event.feature.getGeometry().get());
                 infowindow.open(map);
               });
