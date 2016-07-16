@@ -21,23 +21,55 @@
     <script>
 
       var map;
+      var event_types = {};
+      var hillary_polygon, logo_overlay;
 
       // This hash will split all events into separate categories based on title
-      var event_types = {
-        'Voter Registration': {icon: 'http://maps.google.com/mapfiles/kml/paddle/red-circle.png'},
-        'Party': {icon: 'http://maps.google.com/mapfiles/kml/paddle/grn-circle.png'},
-        'Phone Bank': {icon: 'http://maps.google.com/mapfiles/kml/paddle/blu-circle.png'}
-      };
+      function initEventTypes() {
+        event_types = {
+          'Voter Registration': {icon: 'http://maps.google.com/mapfiles/kml/paddle/red-circle.png'},
+          'Party': {icon: 'http://maps.google.com/mapfiles/kml/paddle/grn-circle.png'},
+          'Phone Bank': {icon: 'http://maps.google.com/mapfiles/kml/paddle/blu-circle.png'}
+        };
+      }
 
-      var legend = document.getElementById('legend');
-      for (var key in event_types) {
-        legend.appendChild(document.createElement("br"));
-        var icon = document.createElement('img');
-        icon.style.height = '16px';
-        icon.style.width = '16px';
-        icon.src = event_types[key].icon;
-        legend.appendChild(document.createTextNode(key));
-        legend.appendChild(icon);
+      // Set up legend
+      function initLegend() {
+        var legend = document.getElementById('legend');
+        for (var key in event_types) {
+          legend.appendChild(document.createElement("br"));
+          var icon = document.createElement('img');
+          icon.style.height = '16px';
+          icon.style.width = '16px';
+          icon.src = event_types[key].icon;
+          legend.appendChild(document.createTextNode(key));
+          legend.appendChild(icon);
+        }
+      }
+
+      function setHQShapes() {
+        var hillary_HQ = [
+          {lat: 40.696118, lng: -73.991529},
+          {lat: 40.696173, lng: -73.991233},
+          {lat: 40.694589, lng: -73.990748},
+          {lat: 40.694956, lng: -73.992074},
+          {lat: 40.696118, lng: -73.991529}
+        ];
+        hillary_polygon = new google.maps.Polygon({
+          paths: hillary_HQ,
+          strokeColor: '#254DA3',
+          strokeOpacity: 0.8,
+          strokeWeight: 4,
+          fillColor: '#E51B2D',
+          fillOpacity: 0.5
+        });
+        var hillary_logo = {
+          north: 40.695355,
+          south: 40.694962,
+          east: -73.9911495,
+          west: -73.991608
+        };
+        logo_overlay = new google.maps.GroundOverlay('images/logo.svg', hillary_logo);
       }
 
       // Take a given event from the HillaryClinton.com API and turn it into a GeoJSON marker with relevant properties
@@ -117,6 +149,10 @@
       // Initiate the map. This function is called as soon as the Google Maps JS finishes executing.
       function initMap() {
 
+        initEventTypes();
+        initLegend();
+        setHQShapes();
+
         // Determine whether the URL query string includes a zip code. If so, get ready to look for events in that area.
         var query_str = window.location.search.substring(1).split("&");
         var lat_lng = [36.778261, -119.41793239999998];
@@ -132,7 +168,7 @@
         // Initialize the new map with a center, zoom, and styles
         map = new google.maps.Map(document.getElementById('map'), {
           center: {lat: lat_lng[0], lng: lat_lng[1]},
-          zoom: 5,
+          zoom: 10,
           styles: [{"featureType":"landscape","stylers":[{"hue":"#F1FF00"},{"saturation":-27.4},{"lightness":9.4},{"gamma":1}]},{"featureType":"road.highway","stylers":[{"hue":"#E51B2D"},{"saturation":-20},{"lightness":36.4},{"gamma":1}]},{"featureType":"road.arterial","stylers":[{"hue":"#00FF4F"},{"saturation":0},{"lightness":0},{"gamma":1}]},{"featureType":"road.local","stylers":[{"hue":"#FFB300"},{"saturation":-38},{"lightness":11.2},{"gamma":1}]},{"featureType":"water","stylers":[{"hue":"#254DA3"},{"saturation":4.2},{"lightness":-63.4},{"gamma":1}]},{"featureType":"poi","stylers":[{"hue":"#9FFF00"},{"saturation":0},{"lightness":0},{"gamma":1}]}]
         });
 
@@ -165,8 +201,11 @@
         };
 
         // This calls the HillaryClinton.com API
-        xhttp.open("GET", ("https://www.hillaryclinton.com/api/events/events?lat="+lat_lng[0]+"&lng="+lat_lng[1]+"&radius=250&earliestTime=2016-06-28T16%3A51%3A45.735Z&status=confirmed&visibility=public&perPage=100&onepage=1&_=1467147104894"), true);
+        xhttp.open("GET", ("https://www.hillaryclinton.com/api/events/events?lat="+lat_lng[0]+"&lng="+lat_lng[1]+"&radius=50&earliestTime=2016-06-28T16%3A51%3A45.735Z&status=confirmed&visibility=public&perPage=500&onepage=1&_=1467147104894"), true);
         xhttp.send();
+
+        hillary_polygon.setMap(map);
+        logo_overlay.setMap(map);
 
       }
     </script>
