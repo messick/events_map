@@ -82,6 +82,9 @@
           west: -73.991608
         };
         logo_overlay = new google.maps.GroundOverlay('images/logo.svg', hillary_logo);
+        google.maps.event.addListener(hillary_polygon, 'click', function() {
+          window.open('http://www.amny.com/news/elections/hillary-clinton-s-brooklyn-campaign-headquarters-inside-her-quirky-nyc-office-1.11619335', '_blank');
+        });
       }
 
       // Take a given event from the HillaryClinton.com API and turn it into a GeoJSON marker with relevant properties
