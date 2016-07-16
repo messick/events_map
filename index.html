@@ -27,9 +27,10 @@
       // This hash will split all events into separate categories based on title
       function initEventTypes() {
         event_types = {
-          'Voter Registration': {icon: 'http://maps.google.com/mapfiles/kml/paddle/red-circle.png'},
-          'Party': {icon: 'http://maps.google.com/mapfiles/kml/paddle/grn-circle.png'},
-          'Phone Bank': {icon: 'http://maps.google.com/mapfiles/kml/paddle/blu-circle.png'}
+          'Voter Registration': {icon: 'http://maps.google.com/mapfiles/kml/paddle/red-circle.png', keywords: ['voter registration']},
+          'Party': {icon: 'http://maps.google.com/mapfiles/kml/paddle/grn-circle.png', keywords: ['party', 'fest']},
+          'Phone Bank': {icon: 'http://maps.google.com/mapfiles/kml/paddle/blu-circle.png', keywords: ['phone bank', 'phonebank']},
+          'Other': {icon: 'http://maps.google.com/mapfiles/kml/paddle/wht-circle.png'}
         };
       }
 
@@ -94,6 +95,9 @@
         // Initialize return variable
         var geo_json = {};
 
+        // Initialize variable indicating whether a given event has been categorized
+        var has_event_type = false;
+
         // If each event type should be assigned to its own object key, then...
         if (split_by_event_type) {
 
@@ -107,14 +111,29 @@
           // Loop through each event from the HillaryClinton.com API
           for (var i = 0; i < json_string.events.length; i++) {
 
+            has_event_type = false;
+
             // Loop through each event type and determine whether this particular event belongs to one of them. If so, add its proprties to the appropriate geo_json key.
             for (var key in event_types) {
-              if (json_string.events[i].name.toLowerCase().includes(key.toLowerCase())) {
+              if (key != 'Other') {
 
+                for (var z = 0; z < event_types[key].keywords.length; z++) {
+                  if (json_string.events[i].name.toLowerCase().includes(event_types[key].keywords[z].toLowerCase())) {
+                    geo_json[key].features.push(fillEventProperties(json_string.events[i]));
+                    has_event_type = true;
+
+                    // Don't keep going: once you add this event to the correct category, break out of the inner loop.
+                    break;
+                  }
+                }
+
+                if (has_event_type) {
+                  // Don't keep going: once you add this event to the correct category, break out of this loop.
+                  break;
+                }
+
+              } else {
                 geo_json[key].features.push(fillEventProperties(json_string.events[i]));
-
-                // Don't keep going: once you add this event to the correct category, break out of the inner loop.
-                break;
               }
             }
 
