@@ -41,3 +41,8 @@ html, body {
   color: #E51B2D;
   border: 2px solid #254DA3;
 }
+
+.legend-icon {
+  height: 16px;
+  width: 16px;
+}
