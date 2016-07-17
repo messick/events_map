@@ -90,7 +90,29 @@
       }
 
       function findEventsNearby(location) {
-        window.open(window.location.href + '?lat=' + location.coords.latitude + '&lng=' + location.coords.longitude, '_self');
+
+        var zip_lookup = new XMLHttpRequest();
+
+        // This function only executes once the browser has received a response from the Google Maps Geocoding API
+        zip_lookup.onreadystatechange = function() {
+          if (zip_lookup.readyState == 4 && zip_lookup.status == 200) {
+
+            var results;
+
+            results = JSON.parse(zip_lookup.responseText).results[0].address_components;
+
+            for (var i = 0; i < results.length; i++) {
+              if (results[i].types[0] == 'postal_code') {
+                window.open('//' + window.location.host + window.location.pathname + '?zip=' + results[i].short_name, '_self');
+              }
+            }
+
+          }
+        };
+
+        // This calls the Google Maps Geocoding API
+        zip_lookup.open("GET", ("https://maps.googleapis.com/maps/api/geocode/json?latlng="+location.coords.latitude+","+location.coords.longitude+"&key=AIzaSyDhUbn5cm5zOYo7-4l4l6ODZ-BesKiEnTo"), true);
+        zip_lookup.send();
       }
 
       // Take a given event from the HillaryClinton.com API and turn it into a GeoJSON marker with relevant properties
