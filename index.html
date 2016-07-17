@@ -11,7 +11,9 @@
     <a href="https://www.hillaryclinton.com/" target="_blank"><img id="logo" src="images/logo.svg"></a>
     <div id="info-box">
       <form id="zip-fields">
-        <input type="text" name="zip" id="zip" maxlength="5" pattern="[0-9]*">
+        <input type="text" name="zip" id="zip" maxlength="5" pattern="[0-9]*" placeholder="ZIP">
+        <input type="date" name="start_date" id="start_date" min="2000-01-02">
+        <input type="date" name="end_date" id="end_date" min="2000-01-02">
         <input type="submit" id="go-btn" value="GO">
         <br>
         <a href="javascript:void(0)" id="locate-me">(my location)</a>
@@ -39,6 +41,14 @@
       var hillary_polygon, logo_overlay;
       var data_layer = {};
       var event_layers;
+
+      var date_filter = [new Date().toISOString(), new Date('2017-12-31').toISOString()];
+      document.getElementById('start_date').value = date_filter[0].substring(0,10);
+      document.getElementById('end_date').value = date_filter[1].substring(0,10);
+      document.getElementById('start_date').min = date_filter[0].substring(0,10);
+      document.getElementById('start_date').max = date_filter[1].substring(0,10);
+      document.getElementById('end_date').min = date_filter[0].substring(0,10);
+      document.getElementById('end_date').max = date_filter[1].substring(0,10);
 
       // This hash will split all events into separate categories based on title
       function initEventTypes() {
@@ -248,14 +258,20 @@
           }
         });
 
-        // Determine whether the URL query string includes a zip code. If so, get ready to look for events in that area.
+        // Determine whether the URL query string includes a zip code and date filters. If so, get ready to look for events in that area and time period.
         var query_str = window.location.search.substring(1).split("&");
         var lat_lng = [36.778261, -119.41793239999998];
         if (query_str.length > 0 && query_str[0].length > 0) {
           for (var i = 0; i < query_str.length; i++) {
-            if (query_str[i].split("=")[0] == 'zip') {
+            if (query_str[i].split("=")[0] == 'zip' && query_str[i].split("=")[1].length > 0) {
               lat_lng = zip_to_lat[query_str[i].split("=")[1]];
-              break;
+              document.getElementById('zip').value = query_str[i].split("=")[1];
+            } else if (query_str[i].split("=")[0] == 'start_date' && new Date(query_str[i].split("=")[1]) >= new Date()) {
+              date_filter[0] = new Date(query_str[i].split("=")[1]).toISOString();
+              document.getElementById('start_date').value = query_str[i].split("=")[1];
+            } else if (query_str[i].split("=")[0] == 'end_date' && new Date(query_str[i].split("=")[1]) <= new Date('2017-12-31')) {
+              date_filter[1] = new Date(query_str[i].split("=")[1]).toISOString();
+              document.getElementById('end_date').value = query_str[i].split("=")[1];
             }
           }
         }
@@ -286,7 +302,7 @@
               });
               data_layer[layer].setMap(map);
               data_layer[layer].addListener('click', function (event) {
-                infowindow.setContent("<strong>" + event.feature.getProperty("title") + "</strong><br>" + event.feature.getProperty("description") + "<br><a href='https://www.hillaryclinton.com/events/view/"+event.feature.getProperty("lookup_id")+"/' target='_blank'>RSVP</a>");
+                infowindow.setContent("<strong>" + event.feature.getProperty("start_date").substring(0,10) + ": " + event.feature.getProperty("title") + "</strong><br>" + event.feature.getProperty("description") + "<br><a href='https://www.hillaryclinton.com/events/view/"+event.feature.getProperty("lookup_id")+"/' target='_blank'>RSVP</a>");
                 infowindow.setPosition(event.feature.getGeometry().get());
                 infowindow.open(map);
               });
@@ -298,7 +314,7 @@
         };
 
         // This calls the HillaryClinton.com API
-        xhttp.open("GET", ("https://www.hillaryclinton.com/api/events/events?lat="+lat_lng[0]+"&lng="+lat_lng[1]+"&radius=50&earliestTime="+encodeURIComponent(new Date().toISOString())+"&status=confirmed&visibility=public&perPage=500&onepage=1&_=1467147104894"), true);
+        xhttp.open("GET", ("https://www.hillaryclinton.com/api/events/events?lat="+lat_lng[0]+"&lng="+lat_lng[1]+"&radius=50&earliestTime="+encodeURIComponent(date_filter[0])+"&latestTime="+encodeURIComponent(date_filter[1])+"&status=confirmed&visibility=public&perPage=500&onepage=1&_=1467147104894"), true);
         xhttp.send();
 
         hillary_polygon.setMap(map);
