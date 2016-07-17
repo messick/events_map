@@ -22,6 +22,18 @@
     <script src="js/variables.js"></script>
     <script>
 
+      // Sets configuration for the map:
+      // - api_key = the API key used to access the Google Maps Geocoding API
+      // - categorize_by_event_type = indicates whether to show different event types or simply show all events aggregated together
+      // - all_events_icon = indicates which pin icon to use if categorize_by_event_type = false
+      // - search_descriptions (not currently functional) = whether events should be categorized based on text in the description as well, not just the title
+      var config = {
+        'api_key': 'AIzaSyDhUbn5cm5zOYo7-4l4l6ODZ-BesKiEnTo',
+        'categorize_by_event_type': true,
+        'all_events_icon': 'http://maps.google.com/mapfiles/kml/paddle/red-circle.png',
+        'search_descriptions': false
+      };
+
       var map;
       var event_types = {};
       var hillary_polygon, logo_overlay;
@@ -41,13 +53,17 @@
       // Set up legend
       function initLegend() {
         var legend = document.getElementById('legend');
-        for (var key in event_types) {
+        for (var key in event_layers) {
           legend.appendChild(document.createElement("br"));
           var icon = document.createElement('img');
           icon.className = 'legend-icon';
           icon.dataset.key = key;
           icon.dataset.visible = 'true';
-          icon.src = event_types[key].icon;
+          if (config['categorize_by_event_type']) {
+            icon.src = event_types[key].icon;
+          } else {
+            icon.src = config['all_events_icon'];
+          }
           legend.appendChild(document.createTextNode(key + ' (' + event_layers[key].features.length + ')'));
           legend.appendChild(icon);
           icon.addEventListener('click', function(event) {
@@ -111,7 +127,7 @@
         };
 
         // This calls the Google Maps Geocoding API to find the zip code for a given LatLng
-        zip_lookup.open("GET", ("https://maps.googleapis.com/maps/api/geocode/json?latlng="+location.coords.latitude+","+location.coords.longitude+"&key=AIzaSyDhUbn5cm5zOYo7-4l4l6ODZ-BesKiEnTo"), true);
+        zip_lookup.open("GET", ("https://maps.googleapis.com/maps/api/geocode/json?latlng="+location.coords.latitude+","+location.coords.longitude+"&key="+config['api_key']), true);
         zip_lookup.send();
       }
 
@@ -196,12 +212,12 @@
           for (var i = 0; i < json_string.events.length; i++) {
 
             // Add the event properties to the geo_json variable
-            geo_json.features.push(json_string.events[i]);
+            geo_json.features.push(fillEventProperties(json_string.events[i]));
 
           }
 
           // Return the aggregated events
-          return {'aggregated_layer': geo_json};
+          return {'All Events': geo_json};
 
         }
 
@@ -251,12 +267,12 @@
 
             data_layer = {};
 
-            event_layers = HillaryToHashOfGeoJSONs(JSON.parse(xhttp.responseText), true);
+            event_layers = HillaryToHashOfGeoJSONs(JSON.parse(xhttp.responseText), config['categorize_by_event_type']);
             for (var layer in event_layers) {
               data_layer[layer] = new google.maps.Data();
               data_layer[layer].addGeoJson(event_layers[layer]);
               data_layer[layer].setStyle({
-                icon: {url: event_types[layer].icon, scaledSize: new google.maps.Size(32, 32)}
+                icon: {url: (config['categorize_by_event_type'] ? event_types[layer].icon : config['all_events_icon']), scaledSize: new google.maps.Size(32, 32)}
               });
               data_layer[layer].setMap(map);
               data_layer[layer].addListener('click', function (event) {
