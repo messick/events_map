@@ -26,12 +26,12 @@
       // - api_key = the API key used to access the Google Maps Geocoding API
       // - categorize_by_event_type = indicates whether to show different event types or simply show all events aggregated together
       // - all_events_icon = indicates which pin icon to use if categorize_by_event_type = false
-      // - search_descriptions (not currently functional) = whether events should be categorized based on text in the description as well, not just the title
+      // - search_descriptions = whether events should be categorized based on text in the description as well, not just the title
       var config = {
         'api_key': 'AIzaSyDhUbn5cm5zOYo7-4l4l6ODZ-BesKiEnTo',
         'categorize_by_event_type': true,
         'all_events_icon': 'http://maps.google.com/mapfiles/kml/paddle/red-circle.png',
-        'search_descriptions': false
+        'search_descriptions': true
       };
 
       var map;
@@ -153,8 +153,9 @@
         // Initialize return variable
         var geo_json = {};
 
-        // Initialize variable indicating whether a given event has been categorized
+        // Initialize variable indicating whether a given event has been categorized, and another variable indicating the event type indicated by the description text, if applicable
         var has_event_type = false;
+        var event_type_in_description;
 
         // If each event type should be assigned to its own object key, then...
         if (split_by_event_type) {
@@ -170,6 +171,7 @@
           for (var i = 0; i < json_string.events.length; i++) {
 
             has_event_type = false;
+            event_type_in_description = '';
 
             // Loop through each event type and determine whether this particular event belongs to one of them. If so, add its proprties to the appropriate geo_json key.
             for (var key in event_types) {
@@ -182,6 +184,10 @@
 
                     // Don't keep going: once you add this event to the correct category, break out of the inner loop.
                     break;
+
+                  // If descriptions are set to be searched (in the config hash) and a description matches one of the event type keywords, then save the event type to the event_type_in_description variable (unless it already has a value). However, this match won't be used unless the event title doesn't match any of the event type keywords.
+                  } else if (config['search_descriptions'] && event_type_in_description == '' && json_string.events[i].description.toLowerCase().includes(event_types[key].keywords[z].toLowerCase())) {
+                    event_type_in_description = key;
                   }
                 }
 
@@ -191,7 +197,11 @@
                 }
 
               } else {
-                geo_json[key].features.push(fillEventProperties(json_string.events[i]));
+                if (config['search_descriptions'] && event_type_in_description != '') {
+                  geo_json[event_type_in_description].features.push(fillEventProperties(json_string.events[i]));
+                } else {
+                  geo_json[key].features.push(fillEventProperties(json_string.events[i]));
+                }
               }
             }
 
