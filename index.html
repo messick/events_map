@@ -13,6 +13,8 @@
       <form id="zip-fields">
         <input type="text" name="zip" id="zip" maxlength="5" pattern="[0-9]*">
         <input type="submit" id="go-btn" value="GO">
+        <br>
+        <a href="#" id="locate-me">(my location)</a>
       </form>
       <div id="legend">
       </div>
@@ -85,6 +87,10 @@
         google.maps.event.addListener(hillary_polygon, 'click', function() {
           window.open('http://www.amny.com/news/elections/hillary-clinton-s-brooklyn-campaign-headquarters-inside-her-quirky-nyc-office-1.11619335', '_blank');
         });
+      }
+
+      function findEventsNearby(location) {
+        window.open(window.location.href + '?lat=' + location.coords.latitude + '&lng=' + position.coords.longitude, '_self');
       }
 
       // Take a given event from the HillaryClinton.com API and turn it into a GeoJSON marker with relevant properties
@@ -185,6 +191,14 @@
         initEventTypes();
         initLegend();
         setHQShapes();
+
+        document.getElementById('locate-me').addEventListener('click', function() {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(findEventsNearby);
+          } else {
+            alert('Geolocation is not enabled on this browser or site.');
+          }
+        });
 
         // Determine whether the URL query string includes a zip code. If so, get ready to look for events in that area.
         var query_str = window.location.search.substring(1).split("&");
