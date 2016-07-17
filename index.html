@@ -33,7 +33,11 @@
         'api_key': 'AIzaSyDhUbn5cm5zOYo7-4l4l6ODZ-BesKiEnTo',
         'categorize_by_event_type': true,
         'all_events_icon': 'http://maps.google.com/mapfiles/kml/paddle/red-circle.png',
-        'search_descriptions': true
+        'search_descriptions': true,
+        'date_filter': {
+          'start_date': new Date().toISOString(),
+          'end_date': new Date('2017-12-31').toISOString()
+        }
       };
 
       var map;
@@ -42,13 +46,12 @@
       var data_layer = {};
       var event_layers;
 
-      var date_filter = [new Date().toISOString(), new Date('2017-12-31').toISOString()];
-      document.getElementById('start_date').value = date_filter[0].substring(0,10);
-      document.getElementById('end_date').value = date_filter[1].substring(0,10);
-      document.getElementById('start_date').min = date_filter[0].substring(0,10);
-      document.getElementById('start_date').max = date_filter[1].substring(0,10);
-      document.getElementById('end_date').min = date_filter[0].substring(0,10);
-      document.getElementById('end_date').max = date_filter[1].substring(0,10);
+      document.getElementById('start_date').value = config.date_filter.start_date.substring(0,10);
+      document.getElementById('end_date').value = config.date_filter.end_date.substring(0,10);
+      document.getElementById('start_date').min = config.date_filter.start_date.substring(0,10);
+      document.getElementById('start_date').max = config.date_filter.end_date.substring(0,10);
+      document.getElementById('end_date').min = config.date_filter.start_date.substring(0,10);
+      document.getElementById('end_date').max = config.date_filter.end_date.substring(0,10);
 
       // This hash will split all events into separate categories based on title
       function initEventTypes() {
@@ -261,15 +264,16 @@
         // Determine whether the URL query string includes a zip code and date filters. If so, get ready to look for events in that area and time period.
         var query_str = window.location.search.substring(1).split("&");
         var lat_lng = [36.778261, -119.41793239999998];
+        var date_filter = [config.date_filter.start_date, config.date_filter.end_date];
         if (query_str.length > 0 && query_str[0].length > 0) {
           for (var i = 0; i < query_str.length; i++) {
             if (query_str[i].split("=")[0] == 'zip' && query_str[i].split("=")[1].length > 0) {
               lat_lng = zip_to_lat[query_str[i].split("=")[1]];
               document.getElementById('zip').value = query_str[i].split("=")[1];
-            } else if (query_str[i].split("=")[0] == 'start_date' && new Date(query_str[i].split("=")[1]) >= new Date()) {
+            } else if (query_str[i].split("=")[0] == 'start_date' && new Date(query_str[i].split("=")[1]) >= Date(config.date_filter.start_date)) {
               date_filter[0] = new Date(query_str[i].split("=")[1]).toISOString();
               document.getElementById('start_date').value = query_str[i].split("=")[1];
-            } else if (query_str[i].split("=")[0] == 'end_date' && new Date(query_str[i].split("=")[1]) <= new Date('2017-12-31')) {
+            } else if (query_str[i].split("=")[0] == 'end_date' && new Date(query_str[i].split("=")[1]) <= Date(config.date_filter.end_date)) {
               date_filter[1] = new Date(query_str[i].split("=")[1]).toISOString();
               document.getElementById('end_date').value = query_str[i].split("=")[1];
             }
