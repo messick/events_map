@@ -89,6 +89,7 @@
         });
       }
 
+      // Given lat-long coordinates from the browser's geolocation feature, this function will use the Google Maps Geocoding API to map it to a zip code and then reload the page with that zip code in the query param string
       function findEventsNearby(location) {
 
         var zip_lookup = new XMLHttpRequest();
@@ -97,9 +98,7 @@
         zip_lookup.onreadystatechange = function() {
           if (zip_lookup.readyState == 4 && zip_lookup.status == 200) {
 
-            var results;
-
-            results = JSON.parse(zip_lookup.responseText).results[0].address_components;
+            var results = JSON.parse(zip_lookup.responseText).results[0].address_components;
 
             for (var i = 0; i < results.length; i++) {
               if (results[i].types[0] == 'postal_code') {
@@ -110,7 +109,7 @@
           }
         };
 
-        // This calls the Google Maps Geocoding API
+        // This calls the Google Maps Geocoding API to find the zip code for a given LatLng
         zip_lookup.open("GET", ("https://maps.googleapis.com/maps/api/geocode/json?latlng="+location.coords.latitude+","+location.coords.longitude+"&key=AIzaSyDhUbn5cm5zOYo7-4l4l6ODZ-BesKiEnTo"), true);
         zip_lookup.send();
       }
@@ -214,6 +213,7 @@
         initLegend();
         setHQShapes();
 
+        // Add a listener to the "my location" link that uses the browseer's built-in geolocation feature to find the user
         document.getElementById('locate-me').addEventListener('click', function() {
           if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(findEventsNearby);
