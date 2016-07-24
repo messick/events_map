@@ -29,11 +29,14 @@
       // - categorize_by_event_type = indicates whether to show different event types or simply show all events aggregated together
       // - all_events_icon = indicates which pin icon to use if categorize_by_event_type = false
       // - search_descriptions = whether events should be categorized based on text in the description as well, not just the title
+      // - default_to_user_location = whether the page should automatically default to events in the user's location unless that user has specifically searched for events in a location
+      // - date_filter = which date period should be included for the events displayed on the map
       var config = {
         'api_key': 'AIzaSyDhUbn5cm5zOYo7-4l4l6ODZ-BesKiEnTo',
         'categorize_by_event_type': true,
         'all_events_icon': 'http://maps.google.com/mapfiles/kml/paddle/red-circle.png',
         'search_descriptions': true,
+        'default_to_user_location': true,
         'date_filter': {
           'start_date': new Date().toISOString(),
           'end_date': new Date('2017-12-31').toISOString()
@@ -247,25 +250,28 @@
 
       }
 
+      function getUserLocation() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(findEventsNearby);
+        } else {
+          alert('Geolocation is not enabled on this browser or site.');
+        }
+      }
+
       // Initiate the map. This function is called as soon as the Google Maps JS finishes executing.
       function initMap() {
 
         initEventTypes();
         setHQShapes();
 
-        // Add a listener to the "my location" link that uses the browseer's built-in geolocation feature to find the user
-        document.getElementById('locate-me').addEventListener('click', function() {
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(findEventsNearby);
-          } else {
-            alert('Geolocation is not enabled on this browser or site.');
-          }
-        });
+        // Add a listener to the "my location" link that uses the browser's built-in geolocation feature to find the user
+        document.getElementById('locate-me').addEventListener('click', getUserLocation);
 
         // Determine whether the URL query string includes a zip code and date filters. If so, get ready to look for events in that area and time period.
         var query_str = window.location.search.substring(1).split("&");
         var lat_lng = [36.778261, -119.41793239999998];
         var date_filter = [config.date_filter.start_date, config.date_filter.end_date];
+        // If there are query parameters, analyze them as follows...
         if (query_str.length > 0 && query_str[0].length > 0) {
           for (var i = 0; i < query_str.length; i++) {
             if (query_str[i].split("=")[0] == 'zip' && query_str[i].split("=")[1].length > 0) {
@@ -279,6 +285,8 @@
               document.getElementById('end_date').value = query_str[i].split("=")[1];
             }
           }
+        } else if (config['default_to_user_location']) {
+          getUserLocation();
         }
 
         // Initialize the new map with a center, zoom, and styles
