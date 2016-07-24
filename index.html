@@ -70,6 +70,7 @@
       // Set up legend
       function initLegend() {
         var legend = document.getElementById('legend');
+        legend.innerHTML = '';
         for (var key in event_layers) {
           legend.appendChild(document.createElement("br"));
           var icon = document.createElement('img');
