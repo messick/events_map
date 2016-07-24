@@ -48,6 +48,7 @@
       var hillary_polygon, logo_overlay;
       var data_layer = {};
       var event_layers;
+      var lat_lng = [36.778261, -119.41793239999998];
 
       document.getElementById('start_date').value = config.date_filter.start_date.substring(0,10);
       document.getElementById('end_date').value = config.date_filter.end_date.substring(0,10);
@@ -135,7 +136,8 @@
 
             for (var i = 0; i < results.length; i++) {
               if (results[i].types[0] == 'postal_code') {
-                window.open('//' + window.location.host + window.location.pathname + '?zip=' + results[i].short_name, '_self');
+                lat_lng = zip_to_lat[results[i].short_name];
+                loadMap();
               }
             }
 
@@ -250,6 +252,7 @@
 
       }
 
+      // Get the user's location via the HTML5 Navigator API
       function getUserLocation() {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(findEventsNearby);
@@ -258,37 +261,7 @@
         }
       }
 
-      // Initiate the map. This function is called as soon as the Google Maps JS finishes executing.
-      function initMap() {
-
-        initEventTypes();
-        setHQShapes();
-
-        // Add a listener to the "my location" link that uses the browser's built-in geolocation feature to find the user
-        document.getElementById('locate-me').addEventListener('click', getUserLocation);
-
-        // Determine whether the URL query string includes a zip code and date filters. If so, get ready to look for events in that area and time period.
-        var query_str = window.location.search.substring(1).split("&");
-        var lat_lng = [36.778261, -119.41793239999998];
-        var date_filter = [config.date_filter.start_date, config.date_filter.end_date];
-        // If there are query parameters, analyze them as follows...
-        if (query_str.length > 0 && query_str[0].length > 0) {
-          for (var i = 0; i < query_str.length; i++) {
-            if (query_str[i].split("=")[0] == 'zip' && query_str[i].split("=")[1].length > 0) {
-              lat_lng = zip_to_lat[query_str[i].split("=")[1]];
-              document.getElementById('zip').value = query_str[i].split("=")[1];
-            } else if (query_str[i].split("=")[0] == 'start_date' && new Date(query_str[i].split("=")[1]) >= Date(config.date_filter.start_date)) {
-              date_filter[0] = new Date(query_str[i].split("=")[1]).toISOString();
-              document.getElementById('start_date').value = query_str[i].split("=")[1];
-            } else if (query_str[i].split("=")[0] == 'end_date' && new Date(query_str[i].split("=")[1]) <= Date(config.date_filter.end_date)) {
-              date_filter[1] = new Date(query_str[i].split("=")[1]).toISOString();
-              document.getElementById('end_date').value = query_str[i].split("=")[1];
-            }
-          }
-        } else if (config['default_to_user_location']) {
-          getUserLocation();
-        }
-
+      function loadMap() {
         // Initialize the new map with a center, zoom, and styles
         map = new google.maps.Map(document.getElementById('map'), {
           center: {lat: lat_lng[0], lng: lat_lng[1]},
@@ -327,12 +300,44 @@
         };
 
         // This calls the HillaryClinton.com API
-        xhttp.open("GET", ("https://www.hillaryclinton.com/api/events/events?lat="+lat_lng[0]+"&lng="+lat_lng[1]+"&radius=50&earliestTime="+encodeURIComponent(date_filter[0])+"&latestTime="+encodeURIComponent(date_filter[1])+"&status=confirmed&visibility=public&perPage=500&onepage=1&_=1467147104894"), true);
+        xhttp.open("GET", ("https://www.hillaryclinton.com/api/events/events?lat="+lat_lng[0]+"&lng="+lat_lng[1]+"&radius=50&earliestTime="+encodeURIComponent(config.date_filter.start_date)+"&latestTime="+encodeURIComponent(config.date_filter.end_date)+"&status=confirmed&visibility=public&perPage=500&onepage=1&_=1467147104894"), true);
         xhttp.send();
 
         hillary_polygon.setMap(map);
         logo_overlay.setMap(map);
+      }
 
+      // Initiate the map. This function is called as soon as the Google Maps JS finishes executing.
+      function initMap() {
+
+        initEventTypes();
+        setHQShapes();
+
+        // Add a listener to the "my location" link that uses the browser's built-in geolocation feature to find the user
+        document.getElementById('locate-me').addEventListener('click', getUserLocation);
+
+        // Determine whether the URL query string includes a zip code and date filters. If so, get ready to look for events in that area and time period.
+        var query_str = window.location.search.substring(1).split("&");
+        // If there are query parameters, analyze them as follows...
+        if (query_str.length > 0 && query_str[0].length > 0) {
+          for (var i = 0; i < query_str.length; i++) {
+            if (query_str[i].split("=")[0] == 'zip' && query_str[i].split("=")[1].length > 0) {
+              lat_lng = zip_to_lat[query_str[i].split("=")[1]];
+              document.getElementById('zip').value = query_str[i].split("=")[1];
+            } else if (query_str[i].split("=")[0] == 'start_date' && new Date(query_str[i].split("=")[1]) >= Date(config.date_filter.start_date)) {
+              config.date_filter.start_date = new Date(query_str[i].split("=")[1]).toISOString();
+              document.getElementById('start_date').value = query_str[i].split("=")[1];
+            } else if (query_str[i].split("=")[0] == 'end_date' && new Date(query_str[i].split("=")[1]) <= Date(config.date_filter.end_date)) {
+              config.date_filter.end_date = new Date(query_str[i].split("=")[1]).toISOString();
+              document.getElementById('end_date').value = query_str[i].split("=")[1];
+            }
+          }
+          loadMap();
+        } else if (config['default_to_user_location']) {
+          getUserLocation();
+        } else {
+          loadMap();
+        }
       }
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDhUbn5cm5zOYo7-4l4l6ODZ-BesKiEnTo&callback=initMap" async defer></script>
