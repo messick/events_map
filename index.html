@@ -8,7 +8,7 @@
   </head>
   <body>
     <div id="map"></div>
-    <a href="https://www.hillaryclinton.com/" target="_blank"><img id="logo" src="images/logo.svg"></a>
+    <a href="https://www.hillaryclinton.com/" target="_blank"><img id="logo" src="images/dev-progress-logo.svg"></a>
     <div id="info-box">
       <form id="zip-fields">
         <input type="text" name="zip" id="zip" maxlength="5" pattern="[0-9]*" placeholder="ZIP">
@@ -113,7 +113,7 @@
           east: -73.9911495,
           west: -73.991608
         };
-        logo_overlay = new google.maps.GroundOverlay('images/logo.svg', hillary_logo);
+        logo_overlay = new google.maps.GroundOverlay('images/dev-progress-logo.svg', hillary_logo);
         google.maps.event.addListener(hillary_polygon, 'click', function() {
           window.open('http://www.amny.com/news/elections/hillary-clinton-s-brooklyn-campaign-headquarters-inside-her-quirky-nyc-office-1.11619335', '_blank');
         });
