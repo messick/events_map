@@ -262,6 +262,52 @@
         }
       }
 
+      // listen for Google Maps "idle" event.
+      // idle is fired when the user is no longer making changes to map
+      function addEventLoadingListener() {
+        var infowWindow = new google.maps.InfoWindow;
+
+        google.maps.event.addListener(map, 'idle', function() {
+          var newBounds = map.getBounds();
+          console.log('Idle, make request');
+
+          // get lat/log from center of current map bounds
+          lat_lng[0] = newBounds.getCenter().lat();
+          lat_lng[1] = newBounds.getCenter().lng();
+
+          var xhttp = new XMLHttpRequest();
+
+          // This function only executes once the browser has received a response from the HillaryClinton.com API
+          xhttp.onreadystatechange = function() {
+            if (xhttp.readyState == 4 && xhttp.status == 200) {
+
+              data_layer = {};
+
+              event_layers = HillaryToHashOfGeoJSONs(JSON.parse(xhttp.responseText), config['categorize_by_event_type']);
+              for (var layer in event_layers) {
+                data_layer[layer] = new google.maps.Data();
+                data_layer[layer].addGeoJson(event_layers[layer]);
+                data_layer[layer].setStyle({
+                  icon: {url: (config['categorize_by_event_type'] ? event_types[layer].icon : config['all_events_icon']), scaledSize: new google.maps.Size(32, 32)}
+                });
+                data_layer[layer].setMap(map);
+                data_layer[layer].addListener('click', function (event) {
+                  infoWindow.setContent("<strong>" + event.feature.getProperty("start_date").substring(0,10) + ": " + event.feature.getProperty("title") + "</strong><br>" + event.feature.getProperty("description") + "<br>"+(event.feature.getProperty("official_event") ? "<img src ='images/hfa_official.svg'> " : "")+"<a href='https://www.hillaryclinton.com/events/view/"+event.feature.getProperty("lookup_id")+"/' target='_blank'>RSVP</a>");
+                  infoWindow.setPosition(event.feature.getGeometry().get());
+                  infoWindow.open(map);
+                });
+              }
+
+              initLegend();
+            }
+          };
+
+          // This calls the HillaryClinton.com API
+          xhttp.open("GET", ("https://www.hillaryclinton.com/api/events/events?lat="+lat_lng[0]+"&lng="+lat_lng[1]+"&radius=50&earliestTime="+encodeURIComponent(config.date_filter.start_date)+"&latestTime="+encodeURIComponent(config.date_filter.end_date)+"&status=confirmed&visibility=public&perPage=500&onepage=1&_=1467147104894"), true);
+          xhttp.send();
+        });
+      }
+s
       function loadMap() {
         // Initialize the new map with a center, zoom, and styles
         map = new google.maps.Map(document.getElementById('map'), {
@@ -270,43 +316,12 @@
           styles: [{"featureType":"landscape","stylers":[{"hue":"#F1FF00"},{"saturation":-27.4},{"lightness":9.4},{"gamma":1}]},{"featureType":"road.highway","stylers":[{"hue":"#E51B2D"},{"saturation":-20},{"lightness":36.4},{"gamma":1}]},{"featureType":"road.arterial","stylers":[{"hue":"#00FF4F"},{"saturation":0},{"lightness":0},{"gamma":1}]},{"featureType":"road.local","stylers":[{"hue":"#FFB300"},{"saturation":-38},{"lightness":11.2},{"gamma":1}]},{"featureType":"water","stylers":[{"hue":"#254DA3"},{"saturation":4.2},{"lightness":-63.4},{"gamma":1}]},{"featureType":"poi","stylers":[{"hue":"#9FFF00"},{"saturation":0},{"lightness":0},{"gamma":1}]}]
         });
 
-        var infowindow = new google.maps.InfoWindow;
-
-        var xhttp = new XMLHttpRequest();
-
-        // This function only executes once the browser has received a response from the HillaryClinton.com API
-        xhttp.onreadystatechange = function() {
-          if (xhttp.readyState == 4 && xhttp.status == 200) {
-
-            data_layer = {};
-
-            event_layers = HillaryToHashOfGeoJSONs(JSON.parse(xhttp.responseText), config['categorize_by_event_type']);
-            for (var layer in event_layers) {
-              data_layer[layer] = new google.maps.Data();
-              data_layer[layer].addGeoJson(event_layers[layer]);
-              data_layer[layer].setStyle({
-                icon: {url: (config['categorize_by_event_type'] ? event_types[layer].icon : config['all_events_icon']), scaledSize: new google.maps.Size(32, 32)}
-              });
-              data_layer[layer].setMap(map);
-              data_layer[layer].addListener('click', function (event) {
-                infowindow.setContent("<strong>" + event.feature.getProperty("start_date").substring(0,10) + ": " + event.feature.getProperty("title") + "</strong><br>" + event.feature.getProperty("description") + "<br>"+(event.feature.getProperty("official_event") ? "<img src ='images/hfa_official.svg'> " : "")+"<a href='https://www.hillaryclinton.com/events/view/"+event.feature.getProperty("lookup_id")+"/' target='_blank'>RSVP</a>");
-                infowindow.setPosition(event.feature.getGeometry().get());
-                infowindow.open(map);
-              });
-            }
-
-            initLegend();
-
-          }
-        };
-
-        // This calls the HillaryClinton.com API
-        xhttp.open("GET", ("https://www.hillaryclinton.com/api/events/events?lat="+lat_lng[0]+"&lng="+lat_lng[1]+"&radius=50&earliestTime="+encodeURIComponent(config.date_filter.start_date)+"&latestTime="+encodeURIComponent(config.date_filter.end_date)+"&status=confirmed&visibility=public&perPage=500&onepage=1&_=1467147104894"), true);
-        xhttp.send();
-
         hillary_polygon.setMap(map);
         logo_overlay.setMap(map);
+        addEventLoadingListener();
       }
+
+
 
       // Initiate the map. This function is called as soon as the Google Maps JS finishes executing.
       function initMap() {
