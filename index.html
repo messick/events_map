@@ -263,7 +263,7 @@
       // listen for Google Maps "idle" event.
       // idle is fired when the user is no longer making changes to map
       function addMapIdleListener() {
-        var infowWindow = new google.maps.InfoWindow;
+        var infoWindow = new google.maps.InfoWindow;
 
         google.maps.event.addListener(map, 'idle', function() {
           var newBounds = map.getBounds();
