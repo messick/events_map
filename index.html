@@ -262,7 +262,7 @@
 
       // listen for Google Maps "idle" event.
       // idle is fired when the user is no longer making changes to map
-      function addEventLoadingListener() {
+      function addMapIdleListener() {
         var infowWindow = new google.maps.InfoWindow;
 
         google.maps.event.addListener(map, 'idle', function() {
@@ -328,7 +328,7 @@
         
         hillary_polygon.setMap(map);
         logo_overlay.setMap(map);
-        addEventLoadingListener();
+        addMapIdleListener();
       }
 
       // Initiate the map. This function is called as soon as the Google Maps JS finishes executing.
